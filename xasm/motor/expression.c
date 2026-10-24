@@ -409,9 +409,14 @@ expr_Bank(SSymbol* symbol) {
 	return r;
 }
 
+uint32_t expr_LabelReferences = 0;
+
 SExpression*
 expr_Symbol(SSymbol* symbol) {
 	if (symbol->flags & SYMF_EXPRESSION) {
+		if (symbol->type == SYM_UNDEFINED || (sect_Current != NULL && symbol->section == sect_Current))
+			expr_LabelReferences += 1;
+
 		if (symbol->flags & SYMF_CONSTANT) {
 			// A constant reference to a symbol defined in another section of this
 			// object unit folds to a value and thus creates no patch, so xlink

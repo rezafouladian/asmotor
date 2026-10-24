@@ -80,6 +80,10 @@ typedef struct Expression {
 	} value;
 } SExpression;
 
+/* Number of references to labels in the current section, or to symbols not
+   yet defined, made by expr_Symbol since this was last reset. */
+extern uint32_t expr_LabelReferences;
+
 /* Free — consumes input (forward declaration for inline helpers) */
 
 extern void

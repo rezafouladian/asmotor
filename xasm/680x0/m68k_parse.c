@@ -652,6 +652,16 @@ parse_PrefixEnd(SPrefix* prefix) {
 	}
 }
 
+static void
+makePcRelative(SAddressingMode* mode, EAddrMode allowed) {
+	if (opt_Current->machineOptions->autoPcRelative && mode->labelReference && (mode->mode & (AM_WORD | AM_LONG)) &&
+	    (allowed & AM_PCDISP)) {
+		mode->mode = AM_PCDISP;
+		mode->outer.baseRegister = REG_PC;
+		mode->outer.displacementSize = SIZE_WORD;
+	}
+}
+
 bool
 m68k_ParseOpCore(SInstruction* instruction, ESize inssz, SAddressingMode* src, SAddressingMode* dest, bool disablePrefix) {
 	EAddrMode allowedSrc;
@@ -661,6 +671,8 @@ m68k_ParseOpCore(SInstruction* instruction, ESize inssz, SAddressingMode* src, S
 	if (opt_Current->machineOptions->cpu >= CPUF_68020)
 		allowedSrc = enable020Modes(allowedSrc);
 
+	makePcRelative(src, allowedSrc);
+
 	if ((allowedSrc & src->mode) == 0 && !(allowedSrc == 0 && src->mode == AM_EMPTY)) {
 		err_Error(ERROR_SOURCE_OPERAND);
 		return true;
@@ -669,6 +681,8 @@ m68k_ParseOpCore(SInstruction* instruction, ESize inssz, SAddressingMode* src, S
 	allowedDest = instruction->allowedDestModes;
 	if (opt_Current->machineOptions->cpu >= CPUF_68020)
 		allowedDest = enable020Modes(allowedDest);
+
+	makePcRelative(dest, allowedDest);
 
 	if ((allowedDest & dest->mode) == 0 && !(allowedDest == 0 && dest->mode == AM_EMPTY)) {
 		err_Error(ERROR_DEST_OPERAND);

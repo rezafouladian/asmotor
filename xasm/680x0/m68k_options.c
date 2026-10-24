@@ -46,6 +46,7 @@ m68k_SetDefaults(SMachineOptions* options) {
 	options->fpu = 0;
 	options->platform = PLATFORM_GENERIC;
 	options->trackMovem = false;
+	options->autoPcRelative = false;
 }
 
 void
@@ -160,6 +161,23 @@ m68k_ParseOption(const char* option) {
 			}
 			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
 			return false;
+		case 'p':
+			if (strlen(&option[1]) == 1) {
+				switch (option[1]) {
+					case 'y':
+					case 'Y':
+						opt_Current->machineOptions->autoPcRelative = true;
+						return true;
+					case 'n':
+					case 'N':
+						opt_Current->machineOptions->autoPcRelative = false;
+						return true;
+					default:
+						break;
+				}
+			}
+			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
+			return false;
 		default:
 			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
 			return false;
@@ -175,5 +193,6 @@ m68k_PrintOptions(void) {
 	       "                 f - Foenix A2560K/X\n"
 	       "                 g - Generic (default)\n"
 	       "                 s - Sega Genesis/Mega Drive\n"
-	       "    -m m<X>  MOVEM updates regmask, <X> is y(es) or n(o) (default)\n");
+	       "    -m m<X>  MOVEM updates regmask, <X> is y(es) or n(o) (default)\n"
+	       "    -m p<X>  Label references use (d16,PC) where allowed, <X> is y(es) or n(o) (default)\n");
 }

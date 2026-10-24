@@ -595,7 +595,9 @@ m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 	}
 
 	// assume an expression is next, and that it will be the outer displacement
+	expr_LabelReferences = 0;
 	addrMode->outer.displacement = parse_Expression(4);
+	uint32_t labelReferences = expr_LabelReferences;
 	if (addrMode->outer.displacement != NULL)
 		addrMode->outer.displacementSize = m68k_GetSizeSpecifier(SIZE_DEFAULT);
 
@@ -636,6 +638,7 @@ m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 		}
 
 		// the outer displacement is an absolute address instead
+		addrMode->labelReference = labelReferences == 1 && addrMode->outer.displacementSize == SIZE_DEFAULT;
 		m68k_OptimizeDisplacement(&addrMode->outer);
 
 		switch (addrMode->outer.displacementSize) {

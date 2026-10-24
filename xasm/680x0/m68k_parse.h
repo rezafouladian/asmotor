@@ -122,6 +122,8 @@ typedef struct {
 	SModeRegisters inner;
 	SModeRegisters outer;
 
+	bool labelReference; // unsized absolute operand referencing a single label
+
 	bool hasBitfield;
 	int bitfieldOffsetRegister;
 	SExpression* bitfieldOffsetExpression;
