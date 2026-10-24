@@ -156,8 +156,14 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 			break;
 		}
 		case AM_PCDISP: {
-			if (mode->outer.displacement)
+			if (mode->outer.displacement) {
 				mode->outer.displacement = expr_PcRelative(mode->outer.displacement, 0);
+				mode->outer.displacement = expr_CheckRange(mode->outer.displacement, -32768, 32767);
+				if (mode->outer.displacement == NULL) {
+					err_Error(ERROR_EXPRESSION_N_BIT, 16);
+					return false;
+				}
+			}
 		}
 		// fall through
 		case AM_ADISP: {
