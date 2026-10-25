@@ -15,6 +15,7 @@
 
 * Fixed PC relative >=68020 addressing wrong offset.
 * Added the 68030 PMMU instructions `PMOVE`, `PMOVEFD`, `PFLUSH`, `PFLUSHA`, `PLOADR`, `PLOADW`, `PTESTR` and `PTESTW`, and the `CRP`, `TT0` and `TT1` registers. `PMOVE` accepts `.q` (or `.d`) for the 64 bit `CRP` and `SRP` registers.
+* A constant zero displacement written as `0(An)` now assembles as `(An)`, as it already did for `(0,An)`. Write `0.w(An)` to keep the 16 bit displacement.
 
 ### RC800
 

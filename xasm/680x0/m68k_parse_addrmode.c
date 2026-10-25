@@ -270,6 +270,21 @@ optimizeFields(SModeRegisters* registers) {
 #define O_INDEX 0x10
 #define O_DISP  0x20
 
+// A known zero displacement without an explicit size turns d16(An) into (An)
+static bool
+optimizeZeroDisplacement(SAddressingMode* mode) {
+	SModeRegisters* regs = &mode->outer;
+	if (regs->displacementSize != SIZE_DEFAULT || !expr_IsConstant(regs->displacement) || regs->displacement->value.integer != 0)
+		return false;
+
+	expr_Free(regs->displacement);
+	regs->displacement = NULL;
+	mode->mode = AM_AIND;
+	mode->directRegister = regs->baseRegister & 7;
+	mode->directRegisterBank = BANK_0;
+	return true;
+}
+
 static bool
 optimizeMode(SAddressingMode* mode) {
 	uint32_t inner = 0;
@@ -631,8 +646,9 @@ m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 			if ((addrMode->outer.displacement = m68k_ExpressionCheck16Bit(addrMode->outer.displacement)) != NULL) {
 				addrMode->mode = AM_ADISP;
 				addrMode->outer.baseRegister = REG_A0 + (lex_Context->token.id - T_68K_REG_A0_IND);
-				addrMode->outer.displacementSize = SIZE_WORD;
 				parse_GetToken();
+				if (!optimizeZeroDisplacement(addrMode))
+					addrMode->outer.displacementSize = SIZE_WORD;
 				return true;
 			}
 		}
