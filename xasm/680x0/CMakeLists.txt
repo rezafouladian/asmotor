@@ -7,6 +7,7 @@ add_executable (motor68k
     m68k_parse_directive.c
     m68k_parse_fpu.c
     m68k_parse_integer.c
+    m68k_parse_mmu.c
     m68k_section.c
     m68k_symbols.c
     m68k_tokens.c

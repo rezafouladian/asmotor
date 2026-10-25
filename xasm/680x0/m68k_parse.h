@@ -221,6 +221,9 @@ extern bool
 m68k_ParseFpuInstruction(void);
 
 extern bool
+m68k_ParseMmuInstruction(void);
+
+extern bool
 m68k_ParseOpCore(SInstruction* pIns, ESize inssz, SAddressingMode* src, SAddressingMode* dest, bool disablePrefix);
 
 extern bool

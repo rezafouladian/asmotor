@@ -42,6 +42,7 @@ test odd-instr.68k b
 test issue15.68k b
 test issue17.68k b
 test 68040.68k b
+test mmu.68k b
 
 testlink amigaexe.68k a
 testlink amigaobj.68k b

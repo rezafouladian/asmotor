@@ -1,0 +1,29 @@
+	SECTION	"Code",CODE[$1000]
+
+	MC68030
+
+	pmove.l	(a2),tc			; f012 4000
+	pflusha				; f000 2400
+	pmove.q	(a0),crp		; f010 4c00
+	pmove.d	(a0),crp		; f010 4c00
+	pmove.l	(8,a0),tc		; f028 4000 0008
+	pmove	tc,(a0)			; f010 4200
+	pmove	srp,(a1)		; f011 4a00
+	pmove	(a1),srp		; f011 4800
+	pmove.l	tt0,(a0)		; f010 0a00
+	pmove.l	(a0),tt1		; f010 0c00
+	pmove.w	mmusr,(a0)		; f010 6200
+	pmove	(a0),mmusr		; f010 6000
+	pmovefd	(a0),tc			; f010 4100
+	pmovefd	(a0),crp		; f010 4d00
+	pmove.l	$1234.w,tc		; f038 4000 1234
+	pmove.l	$12345678,tc		; f039 4000 1234 5678
+	pflush	#5,#7			; f000 30f5
+	pflush	d3,#1			; f000 302b
+	pflush	sfc,#0			; f000 3000
+	pflush	dfc,#2,(a4)		; f014 3841
+	ploadr	#1,(a0)			; f010 2211
+	ploadw	d2,(a1)			; f011 200a
+	ptestr	#1,(a0),#7		; f010 9e11
+	ptestw	sfc,(a0),#3,a2		; f010 8d40
+	ptestr	dfc,(4,a1),#0		; f029 8201 0004

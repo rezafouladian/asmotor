@@ -840,6 +840,8 @@ m68k_ParseInstruction(void) {
 		return true;
 	else if (m68k_ParseFpuInstruction())
 		return true;
+	else if (m68k_ParseMmuInstruction())
+		return true;
 	else if (m68k_ParseDirective())
 		return false;
 
