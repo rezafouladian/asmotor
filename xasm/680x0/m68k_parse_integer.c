@@ -555,13 +555,13 @@ handleBitfieldInstruction(uint16_t opcode, uint16_t extension, SAddressingMode* 
 	if (src->bitfieldWidthRegister != -1) {
 		expr = expr_Or(expr, expr_Const(0x0020 | src->bitfieldWidthRegister));
 	} else {
-		SExpression* bf = expr_CheckRange(src->bitfieldWidthExpression, 0, 31);
+		SExpression* bf = expr_CheckRange(src->bitfieldWidthExpression, 0, 32);
 		src->bitfieldWidthExpression = NULL;
 		if (bf == NULL) {
 			err_Error(ERROR_OPERAND_RANGE);
 			return true;
 		}
-		expr = expr_Or(expr, bf);
+		expr = expr_Or(expr, expr_And(bf, expr_Const(31)));	// a width of 32 is encoded as 0
 	}
 
 	sect_OutputExpr16(expr);
