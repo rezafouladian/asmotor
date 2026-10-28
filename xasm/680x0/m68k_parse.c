@@ -232,6 +232,8 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 			if (mode->outer.indexRegister == REG_NONE) {
 				ins |= 0x0040;
+				if (opt_Current->machineOptions->mpwSuppressedIndex)
+					ins |= 0x8000;
 			} else {
 				ins |= mode->outer.indexRegister << 12;
 				if (mode->outer.indexSize == SIZE_LONG)
@@ -296,6 +298,8 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 			if (mode->inner.indexRegister == REG_NONE) {
 				ins |= 0x0040;
+				if (opt_Current->machineOptions->mpwSuppressedIndex)
+					ins |= 0x8000;
 			} else {
 				ins |= mode->inner.indexRegister << 12;
 				if (mode->inner.indexSize == SIZE_LONG)
@@ -390,6 +394,8 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 			if (mode->outer.indexRegister == REG_NONE) {
 				ins |= 0x0040;
+				if (opt_Current->machineOptions->mpwSuppressedIndex)
+					ins |= 0x8000;
 			} else {
 				ins |= mode->outer.indexRegister << 12;
 				if (mode->outer.indexSize == SIZE_LONG)

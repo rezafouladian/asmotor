@@ -55,6 +55,7 @@ typedef struct MachineOptions {
 	EPlatform68k platform;
 	bool trackMovem;
 	bool autoPcRelative;
+	bool mpwSuppressedIndex;
 } SMachineOptions;
 
 extern SMachineOptions*
