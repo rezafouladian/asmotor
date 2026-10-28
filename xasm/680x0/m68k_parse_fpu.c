@@ -277,6 +277,7 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmod
 				err_Error(ERROR_INVALID_EXPRESSION);
 				return false;
 			}
+			kFactor = expr_And(kFactor, expr_Const(0x7F));
 
 			if (!parse_ExpectChar('}'))
 				return false;
