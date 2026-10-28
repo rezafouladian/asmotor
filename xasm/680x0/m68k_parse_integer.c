@@ -487,8 +487,8 @@ handleBcc(ESize size, SAddressingMode* _src, SAddressingMode* _dest, uint16_t op
 			return true;
 		}
 
-		expr = expr_PcRelative(target, 0);
 		sect_OutputConst16(opcode | 0xFFu);
+		expr = expr_PcRelative(target, 0);
 		sect_OutputExpr32(expr);
 		return true;
 	}
