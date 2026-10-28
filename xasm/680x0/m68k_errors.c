@@ -38,6 +38,7 @@ static const char* g_errors[] = {
     "Not an allowed 68080 mode",
     "Third operand is the wrong kind",
     "Instruction must be word aligned",
+    "Bit number is taken modulo 8 for a memory operand",
 };
 
 const char*

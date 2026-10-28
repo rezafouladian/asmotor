@@ -514,10 +514,14 @@ handleBitInstruction(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint
 		immediateOpcode |= m68k_GetEffectiveAddressField(dest);
 		sect_OutputConst16(immediateOpcode);
 
-		if (dest->mode == AM_DREG)
+		if (dest->mode == AM_DREG) {
 			expr = expr_CheckRange(src->immediateInteger, 0, 31);
-		else
-			expr = expr_CheckRange(src->immediateInteger, 0, 7);
+		} else {
+			if (expr_IsConstant(src->immediateInteger) && src->immediateInteger->value.integer > 7 &&
+			    src->immediateInteger->value.integer <= 255)
+				err_Warn(MERROR_BIT_NUMBER_MODULO);
+			expr = expr_CheckRange(src->immediateInteger, 0, 255);
+		}
 		src->immediateInteger = NULL;
 
 		if (expr != NULL) {
