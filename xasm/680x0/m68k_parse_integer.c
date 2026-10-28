@@ -744,6 +744,8 @@ handleCHK2(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t data)
 	sect_OutputConst16(opcode);
 
 	opcode = (uint16_t) (0x0800 | dest->directRegister << 12);
+	if (dest->mode == AM_AREG)
+		opcode |= 0x8000;
 	sect_OutputConst16(opcode);
 
 	return m68k_OutputExtensionWords(src);
@@ -763,7 +765,7 @@ handleCMP2(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t data)
 	if (dest->mode == AM_AREG)
 		opcode |= 0x8000;
 	sect_OutputConst16(opcode);
-	return true;
+	return m68k_OutputExtensionWords(src);
 }
 
 static bool
