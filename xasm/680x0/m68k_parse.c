@@ -91,6 +91,15 @@ getBitfield(SAddressingMode* mode) {
 	return false;
 }
 
+// The base of a full format PC-relative mode is its extension word. A fixed
+// section resolves PC-relative expressions right away against the current PC,
+// which is the extension word; otherwise they are resolved at the patch, which
+// is the base displacement two bytes later.
+static int
+fullFormatPcAdjustment(void) {
+	return sect_Current != NULL && (sect_Current->flags & (SECTF_LOADFIXED | SECTF_ORGFIXED)) ? 0 : 2;
+}
+
 bool
 m68k_OutputExtensionWords(SAddressingMode* mode) {
 	switch (mode->mode) {
@@ -219,7 +228,7 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 		case AM_PCXDISP020: {
 			if (mode->outer.displacement)
-				mode->outer.displacement = expr_PcRelative(mode->outer.displacement, 2);
+				mode->outer.displacement = expr_PcRelative(mode->outer.displacement, fullFormatPcAdjustment());
 		}
 		// fall through
 		case AM_AXDISP020: {
@@ -285,7 +294,7 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 		case AM_PREINDPCXD020: {
 			if (mode->inner.displacement)
-				mode->inner.displacement = expr_PcRelative(mode->inner.displacement, 2);
+				mode->inner.displacement = expr_PcRelative(mode->inner.displacement, fullFormatPcAdjustment());
 		}
 		// fall through
 		case AM_PREINDAXD020: {
@@ -381,7 +390,7 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 
 		case AM_POSTINDPCXD020: {
 			if (mode->inner.displacement)
-				mode->inner.displacement = expr_PcRelative(mode->inner.displacement, 2);
+				mode->inner.displacement = expr_PcRelative(mode->inner.displacement, fullFormatPcAdjustment());
 		}
 		// fall through
 		case AM_POSTINDAXD020: {
