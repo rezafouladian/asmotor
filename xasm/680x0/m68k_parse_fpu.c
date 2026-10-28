@@ -241,6 +241,12 @@ handleMOVEControlRegister(ESize sz, SAddressingMode* ea, uint16_t opmode) {
 		return true;
 	}
 
+	if (ea->mode == AM_AREG && (opmode & 0x1C00) != (1 << 10)) {
+		// only FPIAR can be moved to or from an address register
+		err_Error(ERROR_OPERAND);
+		return true;
+	}
+
 	sect_OutputConst16(FPU_INS | getEffectiveAddressField(ea));
 	sect_OutputConst16(opmode);
 	m68k_OutputExtensionWords(ea);
@@ -254,6 +260,10 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmod
 		return handleMOVEControlRegister(sz, src, 0x8000 | (0 << 13) | (1 << (dest->directRegister + 10)));
 	} else if (src->mode == AM_FPUCR) {
 		return handleMOVEControlRegister(sz, dest, 0x8000 | (1 << 13) | (1 << (src->directRegister + 10)));
+	} else if (src->mode == AM_AREG || dest->mode == AM_AREG) {
+		// an address register can only be moved to or from FPIAR
+		err_Error(ERROR_OPERAND);
+		return false;
 	} else if (dest->mode == AM_FPUREG) {
 		return genericInstruction(sz, src, dest, 0x0000);
 	} else if (src->mode == AM_FPUREG) {
@@ -743,7 +753,7 @@ static SInstruction s_FpuInstructions[] = {
 	{// FMOD
 		FPUF_6888X,              SIZE_BYTE | SIZE_WORD | SIZE_LONG | SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED, SIZE_EXTENDED, 0x0021, AM_FPU_SOURCE, AM_FPUREG,            true,  genericInstruction},
 	{// FMOVE
-		FPUF_ALL,                SIZE_BYTE | SIZE_WORD | SIZE_LONG | SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED, SIZE_EXTENDED, 0x0000, AM_FPU_SOURCE | AM_FPUCR, AM_FPUCR | AM_FPUREG | AM_DREG | AM_AIND | AM_AINC | AM_ADEC | AM_ADISP | AM_AXDISP | AM_AXDISP020 | AM_PREINDAXD020 | AM_POSTINDAXD020 | AM_WORD | AM_LONG, false, handleMOVE },
+		FPUF_ALL,                SIZE_BYTE | SIZE_WORD | SIZE_LONG | SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED, SIZE_EXTENDED, 0x0000, AM_FPU_SOURCE | AM_FPUCR | AM_AREG, AM_FPUCR | AM_FPUREG | AM_DREG | AM_AREG | AM_AIND | AM_AINC | AM_ADEC | AM_ADISP | AM_AXDISP | AM_AXDISP020 | AM_PREINDAXD020 | AM_POSTINDAXD020 | AM_WORD | AM_LONG, false, handleMOVE },
 	{// FSMOVE
 		FPUF_68040 | FPUF_68060, SIZE_BYTE | SIZE_WORD | SIZE_LONG | SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED, SIZE_EXTENDED, 0x0040, AM_FPU_SOURCE, AM_FPUREG,            false, genericInstruction},
 	{// FDMOVE
