@@ -559,7 +559,8 @@ handleSingleWordInstruction(ESize sz, SAddressingMode* src, SAddressingMode* des
 
 static bool
 handleFSINCOS(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmode) {
-	if (parse_ExpectComma()) {
+	// FSINCOS <ea>,FPc:FPs, or the older FPc,FPs form
+	if (lex_Context->token.id == ':' ? (parse_GetToken(), true) : parse_ExpectComma()) {
 		if (lex_Context->token.id >= T_FPUREG_0 && lex_Context->token.id <= T_FPUREG_7) {
 			uint16_t fps = lex_Context->token.id - T_FPUREG_0;
 			uint16_t fpc = dest->directRegister;
