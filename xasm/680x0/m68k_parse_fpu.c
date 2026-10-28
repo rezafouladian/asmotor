@@ -525,7 +525,7 @@ handleFMOVEM(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opm
 				if ((sz != SIZE_EXTENDED) && (sz != SIZE_DEFAULT))
 					return err_Error(MERROR_INSTRUCTION_SIZE);
 
-				return handleFMOVEMMemorySrc(dest, opmode);
+				return handleFMOVEMMemorySrc(src, opmode);
 			} else if (parseRegisterList(&regList)) {
 				// FMOVEM <ea>,register_list
 				opmode = 0xC000 | regList | (2 << 11);
