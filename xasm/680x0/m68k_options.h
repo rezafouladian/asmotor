@@ -56,6 +56,7 @@ typedef struct MachineOptions {
 	bool trackMovem;
 	bool autoPcRelative;
 	bool mpwSuppressedIndex;
+	bool mpwExtendedPadding;
 } SMachineOptions;
 
 extern SMachineOptions*

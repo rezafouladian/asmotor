@@ -107,7 +107,8 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 		case AM_IMM: {
 			if (mode->immediateString[0] != 0) {
 				uint8_t bytes[FPCONST_MAX_BYTES];
-				size_t length = m68k_EncodeFloatString(mode->immediateString, mode->immediateSize, false, bytes);
+				size_t length = m68k_EncodeFloatString(mode->immediateString, mode->immediateSize,
+				                                       opt_Current->machineOptions->mpwExtendedPadding, bytes);
 				for (size_t i = 0; i < length; i += 2)
 					sect_OutputConst16((uint16_t) (bytes[i] << 8 | bytes[i + 1]));
 				return length != 0;
