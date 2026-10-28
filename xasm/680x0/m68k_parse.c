@@ -17,6 +17,7 @@
 */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -114,6 +115,31 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 				return length != 0;
 			}
 
+			if (mode->immediateSize & (SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED)) {
+				// a floating point operand takes the value of an integer expression
+				// or of a floating point expression
+				uint8_t bytes[FPCONST_MAX_BYTES];
+				size_t length;
+				if (mode->immediateInteger != NULL) {
+					if (!expr_IsConstant(mode->immediateInteger)) {
+						err_Error(ERROR_EXPR_CONST);
+						return false;
+					}
+					char text[16];
+					snprintf(text, sizeof(text), "%d", mode->immediateInteger->value.integer);
+					expr_Free(mode->immediateInteger);
+					mode->immediateInteger = NULL;
+					length = m68k_EncodeFloatString(text, mode->immediateSize,
+					                                opt_Current->machineOptions->mpwExtendedPadding, bytes);
+				} else {
+					length = m68k_EncodeFloatValue(mode->immediateFloat, mode->immediateSize,
+					                               opt_Current->machineOptions->mpwExtendedPadding, bytes);
+				}
+				for (size_t i = 0; i < length; i += 2)
+					sect_OutputConst16((uint16_t) (bytes[i] << 8 | bytes[i + 1]));
+				return length != 0;
+			}
+
 			switch (mode->immediateSize) {
 				case SIZE_BYTE: {
 					mode->immediateInteger = m68k_ExpressionCheck8Bit(mode->immediateInteger);
@@ -141,18 +167,6 @@ m68k_OutputExtensionWords(SAddressingMode* mode) {
 						return true;
 					}
 					return false;
-				}
-				case SIZE_SINGLE: {
-					sect_OutputFloat32(mode->immediateFloat);
-					return true;
-				}
-				case SIZE_DOUBLE: {
-					sect_OutputFloat64(mode->immediateFloat);
-					return true;
-				}
-				case SIZE_EXTENDED: {
-					err_Error(ERROR_EXTENDED_PRECISION_UNSUPPORTED);
-					return true;
 				}
 			}
 		}
@@ -768,7 +782,11 @@ m68k_ParseCommonCpuFpuBody(SInstruction* instruction, ETargetToken token, bool a
 	dest->mode = AM_EMPTY;
 
 	if (instruction->allowedSourceModes != 0 && instruction->allowedSourceModes != AM_EMPTY) {
-		if (m68k_GetAddressingMode(src, allowFloat)) {
+		m68k_FloatImmediateSize = allowFloat ? insSz : SIZE_DEFAULT;
+		bool parsed = m68k_GetAddressingMode(src, allowFloat);
+		m68k_FloatImmediateSize = SIZE_DEFAULT;
+
+		if (parsed) {
 			if (instruction->allowedSourceModes & AM_BITFIELD) {
 				if (!getBitfield(src)) {
 					err_Error(MERROR_EXPECT_BITFIELD);

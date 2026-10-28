@@ -17,6 +17,7 @@
 */
 
 #include <ctype.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -427,6 +428,58 @@ encodeExtended(const SDecimal* decimal, bool mpwPadding, uint8_t* out) {
 	putBits(out + 2, 2, mpwPadding ? exponentWord : 0);
 	putBits(out + 4, 8, mantissa);
 	return 12;
+}
+
+size_t
+m68k_EncodeFloatValue(long double value, ESize size, bool mpwExtendedPadding, uint8_t out[FPCONST_MAX_BYTES]) {
+	switch (size) {
+		case SIZE_SINGLE: {
+			float single = (float) value;
+			uint32_t bits;
+			memcpy(&bits, &single, sizeof(bits));
+			putBits(out, 4, bits);
+			return 4;
+		}
+		case SIZE_DOUBLE: {
+			double doubleValue = (double) value;
+			uint64_t bits;
+			memcpy(&bits, &doubleValue, sizeof(bits));
+			putBits(out, 8, bits);
+			return 8;
+		}
+		case SIZE_EXTENDED: {
+			uint16_t exponentWord = signbit(value) ? 0x8000 : 0;
+			uint64_t mantissa = 0;
+
+			memset(out, 0, 12);
+			if (isnan(value)) {
+				putBits(out, 2, exponentWord | 0x7FFF);
+				putBits(out + 4, 8, 0xC000000000000000);
+				return 12;
+			}
+			if (isinf(value)) {
+				putBits(out, 2, exponentWord | 0x7FFF);
+				return 12;
+			}
+			if (value != 0) {
+				int exponent;
+				long double fraction = frexpl(fabsl(value), &exponent); // value = fraction * 2^exponent, 0.5 <= fraction < 1
+				if (exponent - 1 < -16382 || exponent - 1 > 16383)
+					return err_Error(ERROR_OPERAND_RANGE), 0;
+
+				mantissa = (uint64_t) ldexpl(fraction, 64);
+				exponentWord |= (uint16_t) (exponent - 1 + 16383);
+			}
+
+			putBits(out, 2, exponentWord);
+			putBits(out + 2, 2, mpwExtendedPadding ? exponentWord : 0);
+			putBits(out + 4, 8, mantissa);
+			return 12;
+		}
+		default:
+			// packed decimal constants only as bit patterns
+			return err_Error(MERROR_FPU_CONSTANT_PATTERN), 0;
+	}
 }
 
 size_t

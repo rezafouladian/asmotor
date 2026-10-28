@@ -119,6 +119,7 @@ typedef struct {
 	long double immediateFloat;
 	ESize immediateSize;
 	char immediateString[128]; // FPU constant in MPW Asm string form, #"..."; empty if not used
+	bool immediateLiteral;     // immediateString holds a plain decimal literal, #1.5
 
 	SModeRegisters inner;
 	SModeRegisters outer;
@@ -190,6 +191,10 @@ m68k_GetEffectiveAddressField(SAddressingMode* mode);
 
 extern bool
 m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat);
+
+// Size of the FPU operand being parsed, so a floating point immediate can be
+// read as one; SIZE_DEFAULT otherwise
+extern ESize m68k_FloatImmediateSize;
 
 extern ESize
 m68k_GetSizeSpecifier(ESize defaultSize);

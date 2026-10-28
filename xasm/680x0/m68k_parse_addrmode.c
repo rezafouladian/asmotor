@@ -16,6 +16,7 @@
     along with ASMotor.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -25,10 +26,12 @@
 #include "options.h"
 #include "parse.h"
 #include "parse_expression.h"
+#include "lexer.h"
 #include "parse_float_expression.h"
 #include "tokens.h"
 
 #include "m68k_errors.h"
+#include "m68k_fpconst.h"
 #include "m68k_options.h"
 #include "m68k_parse.h"
 #include "m68k_tokens.h"
@@ -509,11 +512,83 @@ m68k_OptimizeDisplacement(SModeRegisters* pRegs) {
 	}
 }
 
+ESize m68k_FloatImmediateSize = SIZE_DEFAULT;
+
+// Read a plain decimal literal, such as 1.5, -2 or 6.02e23 (with or without
+// the f suffix), straight from the input following a #, so a floating point
+// immediate can be converted exactly. Anything else is put back.
+static bool
+readDecimalLiteral(char* literal, size_t capacity) {
+	char raw[FPCONST_MAX_STRING];
+	size_t length = 0;
+	size_t digits = 0;
+	size_t end;
+	char ch;
+
+#define NEXT_CHAR()                       \
+	do {                                  \
+		if (length == sizeof(raw))        \
+			goto putBack;                 \
+		raw[length++] = ch = lex_GetChar(); \
+	} while (0)
+
+	NEXT_CHAR();
+	if (ch == '-' || ch == '+')
+		NEXT_CHAR();
+	while (isdigit((unsigned char) ch)) {
+		++digits;
+		NEXT_CHAR();
+	}
+	if (ch == '.') {
+		NEXT_CHAR();
+		while (isdigit((unsigned char) ch)) {
+			++digits;
+			NEXT_CHAR();
+		}
+	}
+	if (digits == 0)
+		goto putBack;
+
+	if (ch == 'e' || ch == 'E') {
+		size_t exponentDigits = 0;
+		NEXT_CHAR();
+		if (ch == '-' || ch == '+')
+			NEXT_CHAR();
+		while (isdigit((unsigned char) ch)) {
+			++exponentDigits;
+			NEXT_CHAR();
+		}
+		if (exponentDigits == 0)
+			goto putBack;
+	}
+
+	end = length - 1;
+	if (ch == 'f')
+		NEXT_CHAR();
+
+	if (ch != ',' && ch != ';' && ch != ')' && ch != 0 && !isspace((unsigned char) ch))
+		goto putBack;
+	if (end >= capacity)
+		goto putBack;
+
+	lex_UnputChar(ch);
+	memcpy(literal, raw, end);
+	literal[end] = 0;
+	return true;
+
+putBack:
+	lex_UnputStringLength(raw, length);
+	return false;
+
+#undef NEXT_CHAR
+}
+
 bool
 m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 	addrMode->immediateInteger = NULL;
 	addrMode->immediateFloat = 0;
 	addrMode->immediateString[0] = 0;
+	addrMode->immediateLiteral = false;
 	addrMode->directRegister = 0;
 	addrMode->directRegisterBank = BANK_0;
 	addrMode->inner.baseRegister = REG_NONE;
@@ -603,8 +678,17 @@ m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 	}
 
 	if (lex_Context->token.id == '#') {
-		parse_GetToken();
 		addrMode->mode = AM_IMM;
+
+		// A decimal literal in a floating point operand is converted exactly
+		if (allowFloat && (m68k_FloatImmediateSize & (SIZE_SINGLE | SIZE_DOUBLE | SIZE_EXTENDED | SIZE_PACKED)) &&
+		    readDecimalLiteral(addrMode->immediateString, sizeof(addrMode->immediateString))) {
+			addrMode->immediateLiteral = true;
+			parse_GetToken();
+			return true;
+		}
+
+		parse_GetToken();
 
 		// FPU constant as a string, like MPW Asm: #"0.25" or #"$3E800000"
 		if (allowFloat && lex_Context->token.id == T_STRING) {

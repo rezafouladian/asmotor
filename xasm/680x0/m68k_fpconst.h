@@ -37,4 +37,10 @@
 extern size_t
 m68k_EncodeFloatString(const char* text, ESize size, bool mpwExtendedPadding, uint8_t out[FPCONST_MAX_BYTES]);
 
+// Encode the value of a floating point expression for a single, double or
+// extended precision operand. The precision is that of the host's long double.
+// Returns the number of bytes written to out, or 0 after reporting an error.
+extern size_t
+m68k_EncodeFloatValue(long double value, ESize size, bool mpwExtendedPadding, uint8_t out[FPCONST_MAX_BYTES]);
+
 #endif

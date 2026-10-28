@@ -17,6 +17,7 @@
 */
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "errors.h"
 #include "expression.h"
@@ -306,8 +307,17 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmod
 
 static bool
 handleFMOVECR(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmode) {
-	if (src->immediateString[0] != 0)
-		return err_Error(ERROR_OPERAND);
+	if (src->immediateString[0] != 0) {
+		// the ROM offset was read as a decimal literal of the .X operand
+		if (!src->immediateLiteral)
+			return err_Error(ERROR_OPERAND);
+
+		char* end;
+		long offset = strtol(src->immediateString, &end, 10);
+		if (*end != 0)
+			return err_Error(ERROR_OPERAND);
+		src->immediateInteger = expr_Const((int32_t) offset);
+	}
 
 	SExpression* expr = expr_Or(expr_Const((dest->directRegister << 7) | 0x5C00), expr_CheckRange(src->immediateInteger, 0, 127));
 	src->immediateInteger = NULL;
