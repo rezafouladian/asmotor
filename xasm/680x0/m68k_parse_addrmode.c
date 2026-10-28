@@ -17,6 +17,7 @@
 */
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "errors.h"
 #include "expression.h"
@@ -25,6 +26,7 @@
 #include "parse.h"
 #include "parse_expression.h"
 #include "parse_float_expression.h"
+#include "tokens.h"
 
 #include "m68k_errors.h"
 #include "m68k_options.h"
@@ -511,6 +513,7 @@ bool
 m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 	addrMode->immediateInteger = NULL;
 	addrMode->immediateFloat = 0;
+	addrMode->immediateString[0] = 0;
 	addrMode->directRegister = 0;
 	addrMode->directRegisterBank = BANK_0;
 	addrMode->inner.baseRegister = REG_NONE;
@@ -602,6 +605,23 @@ m68k_GetAddressingMode(SAddressingMode* addrMode, bool allowFloat) {
 	if (lex_Context->token.id == '#') {
 		parse_GetToken();
 		addrMode->mode = AM_IMM;
+
+		// FPU constant as a string, like MPW Asm: #"0.25" or #"$3E800000"
+		if (allowFloat && lex_Context->token.id == T_STRING) {
+			if (lex_Context->token.length >= sizeof(addrMode->immediateString)) {
+				err_Error(MERROR_FPU_CONSTANT);
+				return false;
+			}
+			memcpy(addrMode->immediateString, lex_Context->token.value.string, lex_Context->token.length);
+			addrMode->immediateString[lex_Context->token.length] = 0;
+			if (addrMode->immediateString[0] == 0) {
+				err_Error(MERROR_FPU_CONSTANT);
+				return false;
+			}
+			parse_GetToken();
+			return true;
+		}
+
 		addrMode->immediateInteger = parse_Expression(4);
 		if (addrMode->immediateInteger == NULL && allowFloat) {
 			addrMode->immediateFloat = parse_FloatExpression(4);

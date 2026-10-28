@@ -306,6 +306,9 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmod
 
 static bool
 handleFMOVECR(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmode) {
+	if (src->immediateString[0] != 0)
+		return err_Error(ERROR_OPERAND);
+
 	SExpression* expr = expr_Or(expr_Const((dest->directRegister << 7) | 0x5C00), expr_CheckRange(src->immediateInteger, 0, 127));
 	src->immediateInteger = NULL;
 
@@ -592,6 +595,9 @@ handleFTRAPcc(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t op
 	uint16_t firstWord = FPU_INS | 0x0078;
 	bool outputWord = false;
 	bool outputLong = false;
+
+	if (src->mode == AM_IMM && src->immediateString[0] != 0)
+		return err_Error(ERROR_OPERAND);
 
 	if (sz == SIZE_DEFAULT && src->mode == AM_EMPTY) {
 		firstWord |= 0x0004;

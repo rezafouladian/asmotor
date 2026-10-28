@@ -31,6 +31,7 @@
 #include "section.h"
 
 #include "m68k_errors.h"
+#include "m68k_fpconst.h"
 #include "m68k_options.h"
 #include "m68k_parse.h"
 #include "m68k_symbols.h"
@@ -104,6 +105,14 @@ bool
 m68k_OutputExtensionWords(SAddressingMode* mode) {
 	switch (mode->mode) {
 		case AM_IMM: {
+			if (mode->immediateString[0] != 0) {
+				uint8_t bytes[FPCONST_MAX_BYTES];
+				size_t length = m68k_EncodeFloatString(mode->immediateString, mode->immediateSize, false, bytes);
+				for (size_t i = 0; i < length; i += 2)
+					sect_OutputConst16((uint16_t) (bytes[i] << 8 | bytes[i + 1]));
+				return length != 0;
+			}
+
 			switch (mode->immediateSize) {
 				case SIZE_BYTE: {
 					mode->immediateInteger = m68k_ExpressionCheck8Bit(mode->immediateInteger);

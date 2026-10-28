@@ -1,5 +1,6 @@
 add_executable (motor68k
     m68k_errors.c
+    m68k_fpconst.c
     m68k_options.c
     m68k_main.c
     m68k_parse.c

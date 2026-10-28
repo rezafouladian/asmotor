@@ -39,6 +39,8 @@ static const char* g_errors[] = {
     "Third operand is the wrong kind",
     "Instruction must be word aligned",
     "Bit number is taken modulo 8 for a memory operand",
+    "Invalid FPU constant",
+    "FPU constant must be given as a $ bit pattern",
 };
 
 const char*

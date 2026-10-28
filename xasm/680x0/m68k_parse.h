@@ -118,6 +118,7 @@ typedef struct {
 	SExpression* immediateInteger;
 	long double immediateFloat;
 	ESize immediateSize;
+	char immediateString[128]; // FPU constant in MPW Asm string form, #"..."; empty if not used
 
 	SModeRegisters inner;
 	SModeRegisters outer;
