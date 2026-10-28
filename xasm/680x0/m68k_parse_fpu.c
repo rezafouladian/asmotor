@@ -416,7 +416,8 @@ handleFMOVEMMemoryDest(SAddressingMode* dest, uint16_t opmode) {
 static bool
 handleFMOVEMMemorySrc(SAddressingMode* src, uint16_t opmode) {
 	uint32_t allowedModes =
-	    (AM_AIND | AM_AINC | AM_ADISP | AM_AXDISP | AM_AXDISP020 | AM_PREINDAXD020 | AM_POSTINDAXD020 | AM_WORD | AM_LONG);
+	    (AM_AIND | AM_AINC | AM_ADISP | AM_AXDISP | AM_AXDISP020 | AM_PREINDAXD020 | AM_POSTINDAXD020 | AM_WORD | AM_LONG |
+	     AM_PCDISP | AM_PCXDISP | AM_PCXDISP020 | AM_PREINDPCXD020 | AM_POSTINDPCXD020);
 	if ((src->mode & allowedModes) != 0) {
 		opmode = reverseRegisterList(opmode);
 		uint16_t firstWord = getEffectiveAddressField(src) | FPU_INS;
