@@ -285,7 +285,7 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t opmod
 		}
 
 		sect_OutputConst16(FPU_INS | getEffectiveAddressField(dest));
-		sect_OutputExpr16(expr_Or(expr_Const(opmode | (src->directRegister << 7) | getSourceSpecifier(sz, src)), kFactor));
+		sect_OutputExpr16(expr_Or(expr_Const(opmode | (src->directRegister << 7) | (getSourceSpecifier(sz, dest) & 0x1C00)), kFactor));
 		return m68k_OutputExtensionWords(dest);
 	}
 
