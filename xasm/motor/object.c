@@ -113,6 +113,16 @@
 /* Private functions */
 
 static uint32_t
+sectionSymbolValue(const SSymbol* symbol, const SSection* section) {
+	// Labels in a fixed section hold their absolute address (see sym_CreateLabel), but xlink adds the
+	// section's location to every symbol defined in it
+	if (symbol->type == SYM_EQU)
+		return (uint32_t) (symbol->value.integer - (int32_t) section->cpuOrigin);
+
+	return (uint32_t) symbol->value.integer;
+}
+
+static uint32_t
 writeSymbols(SSection* section, FILE* fileHandle, SExpression* expression, uint32_t nextId) {
 	if (expression != NULL) {
 		nextId = writeSymbols(section, fileHandle, expression->left, nextId);
@@ -127,10 +137,10 @@ writeSymbols(SSection* section, FILE* fileHandle, SExpression* expression, uint3
 				if (symbol->section == section) {
 					if (symbol->flags & SYMF_UNIT_EXPORT) {
 					 fputll(3, fileHandle); //	LOCALEXPORT
-					 fputll((uint32_t) (symbol->value.integer - (int32_t) section->cpuOrigin), fileHandle);
+					 fputll(sectionSymbolValue(symbol, section), fileHandle);
 					} else if (symbol->flags & SYMF_EXPORT) {
 						fputll(0, fileHandle); //	EXPORT
-						fputll((uint32_t) symbol->value.integer, fileHandle);
+						fputll(sectionSymbolValue(symbol, section), fileHandle);
 					} else {
 						fputll(2, fileHandle); //	LOCAL
 						fputll((uint32_t) symbol->value.integer, fileHandle);
@@ -167,10 +177,10 @@ writeSymbolsWithFlags(FILE* fileHandle, SSection* section, uint32_t symbolId, ui
 				fputsz(str_String(sym->name), fileHandle);
 			 if (sym->flags & SYMF_EXPORT) {
 				 fputll(0, fileHandle); //	EXPORT
-				 fputll((uint32_t) sym->value.integer, fileHandle);
+				 fputll(sectionSymbolValue(sym, section), fileHandle);
 			 } else if (sym->flags & SYMF_UNIT_EXPORT) {
 				 fputll(3, fileHandle); //	LOCALEXPORT
-				 fputll((uint32_t) (sym->value.integer - (int32_t) section->cpuOrigin), fileHandle);
+				 fputll(sectionSymbolValue(sym, section), fileHandle);
 			 } else if (sym->flags & SYMF_RELOC) {
 				 fputll(2, fileHandle); //	LOCAL
 				 fputll((uint32_t) sym->value.integer, fileHandle);

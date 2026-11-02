@@ -1,0 +1,4 @@
+	IMPORT	Start
+	SECTION	"Other",CODE
+	dc.l	Start
+	bra.w	Start

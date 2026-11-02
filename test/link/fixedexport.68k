@@ -1,0 +1,4 @@
+	SECTION	"Start",CODE[$40800000]
+Start::	dc.l	$12345678
+	SECTION	"Rest",CODE
+	dc.l	Start
