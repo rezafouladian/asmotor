@@ -53,7 +53,7 @@ POOL name cpu_address_expr cpu_bank_expr size_expr ?(image_offset_expr ?(:overla
 | image_offset_expr | Where the pool should be placed in a binary image or overlay. If missing or -1, the pool should be omitted in the binary image, which is typically used for BSS pools. |
 | overlay | The overlay file in which the pool should be placed. | 
 
-For readability, the expression should be surrounded by parentheses, although this is not necessary.
+For readability, the expression should be surrounded by parentheses, although this is not necessary. Outside parentheses, a `+` or `-` with a space before it and none after starts the next expression, so `$1000 -1` is two expressions while `$1000-1` and `$1000 - 1` are one.
 
 Examples:
 ```
@@ -75,7 +75,7 @@ The `start` and `end` components (both inclusive) define the range, and thus num
 
 Example:
 ```
-POOLS banks[1:4] ($1000+@*$100) @ $100 $100 (@-1)*$100
+POOLS banks[1:4] ($1000+@*$100) @ $100 (@-1)*$100
 ```
 
 

@@ -57,6 +57,8 @@ static bool g_parseSymbol;
 
 static const char* token;
 static size_t token_length;
+static bool token_after_space;
+static int paren_depth;
 static uint32_t pool_index;
 
 static const char* g_filename;
@@ -81,9 +83,15 @@ appendConstant(string_buffer* expr, uint32_t constant) {
 	appendLong(expr, OBJ_CONSTANT, constant);
 }
 
+static bool
+isSpace(char ch) {
+	return ch == ' ' || ch == '\t';
+}
+
 static void
 nextToken(const char** in) {
-	while (**in == ' ' || **in == '\t')
+	token_after_space = isSpace(**in);
+	while (isSpace(**in))
 		++*in;
 
 	switch (**in) {
@@ -251,7 +259,10 @@ parseExpression_3(const char** line, string_buffer* expr) {
 		}
 	} else if (tokenIs("(")) {
 		nextToken(line);
-		if (parseExpression_1(line, expr)) {
+		++paren_depth;
+		bool parsed = parseExpression_1(line, expr);
+		--paren_depth;
+		if (parsed) {
 			if (tokenIs(")")) {
 				nextToken(line);
 				return true;
@@ -294,6 +305,10 @@ parseExpression_1(const char** line, string_buffer* expr) {
 		while (true) {
 			bool plus = tokenIs("+");
 			bool minus = tokenIs("-");
+			// Outside parentheses, a sign with a space before it and none after ("$1000 -1") starts the next expression
+			if ((plus || minus) && paren_depth == 0 && token_after_space && !isSpace(**line))
+				break;
+
 			if (plus || minus) {
 				nextToken(line);
 				if (parseExpression_2(line, expr)) {

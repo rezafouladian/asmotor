@@ -24,6 +24,9 @@ rm -f pinnedbss.obj pinnedbss.map pinnedbss.bin
 # The assembler keeps such labels at their absolute address. If it writes that
 # value for an EXPORT, xlink adds the section's location again, so another
 # object importing "Start" sees $81000000 instead of $40800000.
+#
+# fixedexport.def also writes its pool banks as a bare "-1", which must not
+# be read as a subtraction from the address before it.
 
 rm -f fixedexport.obj fixedexport2.obj fixedexport.bin
 
