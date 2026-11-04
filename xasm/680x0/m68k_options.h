@@ -57,6 +57,7 @@ typedef struct MachineOptions {
 	bool autoPcRelative;
 	bool mpwSuppressedIndex;
 	bool mpwExtendedPadding;
+	bool keepAsWritten;
 } SMachineOptions;
 
 extern SMachineOptions*

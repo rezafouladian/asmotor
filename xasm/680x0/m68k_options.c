@@ -49,6 +49,7 @@ m68k_SetDefaults(SMachineOptions* options) {
 	options->autoPcRelative = false;
 	options->mpwSuppressedIndex = false;
 	options->mpwExtendedPadding = false;
+	options->keepAsWritten = false;
 }
 
 void
@@ -214,6 +215,23 @@ m68k_ParseOption(const char* option) {
 			}
 			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
 			return false;
+		case 'q':
+			if (strlen(&option[1]) == 1) {
+				switch (option[1]) {
+					case 'y':
+					case 'Y':
+						opt_Current->machineOptions->keepAsWritten = true;
+						return true;
+					case 'n':
+					case 'N':
+						opt_Current->machineOptions->keepAsWritten = false;
+						return true;
+					default:
+						break;
+				}
+			}
+			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
+			return false;
 		default:
 			err_Warn(WARN_MACHINE_UNKNOWN_OPTION, option);
 			return false;
@@ -231,6 +249,9 @@ m68k_PrintOptions(void) {
 	       "                 s - Sega Genesis/Mega Drive\n"
 	       "    -m m<X>  MOVEM updates regmask, <X> is y(es) or n(o) (default)\n"
 	       "    -m p<X>  Label references use (d16,PC) where allowed, <X> is y(es) or n(o) (default)\n"
+	       "    -m q<X>  Keep instructions as written: ADDI/SUBI/ADDA/SUBA #1-8 don't become ADDQ/SUBQ,\n"
+	       "             MOVE.L #n,Dn doesn't become MOVEQ, and ADD/SUB/AND/OR/CMP #n,Dn use the <ea>,Dn\n"
+	       "             form instead of ADDI/SUBI/ANDI/ORI/CMPI, <X> is y(es) or n(o) (default)\n"
 	       "    -m x<X>  Decimal extended precision constants repeat their exponent in the padding\n"
 	       "             word like MPW Asm, <X> is y(es) or n(o) (default)\n"
 	       "    -m z<X>  Fill a suppressed index register field with A0.W like MPW Asm, <X> is y(es) or n(o) (default)\n");

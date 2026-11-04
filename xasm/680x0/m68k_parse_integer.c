@@ -135,8 +135,8 @@ handleSUBQ(ESize size, SAddressingMode* src, SAddressingMode* dest, uint16_t dat
 
 static bool
 handleArithmeticA(ESize size, SAddressingMode* src, SAddressingMode* dest, ETargetToken quick, uint16_t opcode) {
-	if (src->mode == AM_IMM && expr_IsConstant(src->immediateInteger) && src->immediateInteger->value.integer >= 1 &&
-	    src->immediateInteger->value.integer <= 8) {
+	if (!opt_Current->machineOptions->keepAsWritten && src->mode == AM_IMM && expr_IsConstant(src->immediateInteger) &&
+	    src->immediateInteger->value.integer >= 1 && src->immediateInteger->value.integer <= 8) {
 		return handleToken(quick, size, src, dest);
 	}
 
@@ -179,8 +179,8 @@ handleArithmeticLogicalI(uint16_t opcode, ESize size, SAddressingMode* src, SAdd
 
 static bool
 handleArithmeticI(ESize size, SAddressingMode* src, SAddressingMode* dest, ETargetToken quick, uint16_t opcode) {
-	if (src->mode == AM_IMM && expr_IsConstant(src->immediateInteger) && src->immediateInteger->value.integer >= 1 &&
-	    src->immediateInteger->value.integer <= 8) {
+	if (!opt_Current->machineOptions->keepAsWritten && src->mode == AM_IMM && expr_IsConstant(src->immediateInteger) &&
+	    src->immediateInteger->value.integer >= 1 && src->immediateInteger->value.integer <= 8) {
 		return handleToken(quick, size, src, dest);
 	}
 
@@ -267,7 +267,7 @@ handleArithmetic(ESize size, SAddressingMode* src, SAddressingMode* dest, ETarge
 	if (dest->mode == AM_AREG)
 		return handleToken(address, size, src, dest);
 
-	if (src->mode == AM_IMM)
+	if (src->mode == AM_IMM && !(opt_Current->machineOptions->keepAsWritten && dest->mode == AM_DREG))
 		return handleToken(immediate, size, src, dest);
 
 	return handleArithmeticLogical(opcode, size, src, dest);
@@ -333,7 +333,7 @@ handleCMP(ESize size, SAddressingMode* src, SAddressingMode* dest, uint16_t data
 	if (dest->mode == AM_AREG)
 		return handleToken(T_68K_CMPA, size, src, dest);
 
-	if (src->mode == AM_IMM)
+	if (src->mode == AM_IMM && !(opt_Current->machineOptions->keepAsWritten && dest->mode == AM_DREG))
 		return handleToken(T_68K_CMPI, size, src, dest);
 
 	if (dest->mode == AM_DREG)
@@ -345,7 +345,8 @@ handleCMP(ESize size, SAddressingMode* src, SAddressingMode* dest, uint16_t data
 
 static bool
 handleAND(ESize size, SAddressingMode* src, SAddressingMode* dest, uint16_t data) {
-	if (src->mode == AM_IMM || dest->mode == AM_SYSREG)
+	if ((src->mode == AM_IMM && !(opt_Current->machineOptions->keepAsWritten && dest->mode == AM_DREG)) ||
+	    dest->mode == AM_SYSREG)
 		return handleToken(T_68K_ANDI, size, src, dest);
 
 	return handleArithmeticLogical(0xC000, size, src, dest);
@@ -1060,8 +1061,9 @@ handleMOVE(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t data)
 	uint16_t destea;
 	uint16_t ins;
 
-	if (src->mode == AM_IMM && dest->mode == AM_DREG && sz == SIZE_LONG && expr_IsConstant(src->immediateInteger) &&
-	    src->immediateInteger->value.integer >= -128 && src->immediateInteger->value.integer < 127) {
+	if (!opt_Current->machineOptions->keepAsWritten && src->mode == AM_IMM && dest->mode == AM_DREG && sz == SIZE_LONG &&
+	    expr_IsConstant(src->immediateInteger) && src->immediateInteger->value.integer >= -128 &&
+	    src->immediateInteger->value.integer < 127) {
 		return handleToken(T_68K_MOVEQ, sz, src, dest);
 	} else if (src->mode == AM_SYSREG) {
 		return handleMOVEfromSYSREG(sz, src, dest, data);
@@ -1393,7 +1395,8 @@ handleNOT(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t data) 
 
 static bool
 handleOR(ESize sz, SAddressingMode* src, SAddressingMode* dest, uint16_t data) {
-	if (src->mode == AM_IMM || dest->mode == AM_SYSREG)
+	if ((src->mode == AM_IMM && !(opt_Current->machineOptions->keepAsWritten && dest->mode == AM_DREG)) ||
+	    dest->mode == AM_SYSREG)
 		return handleToken(T_68K_ORI, sz, src, dest);
 
 	return handleArithmeticLogical(0x8000, sz, src, dest);
