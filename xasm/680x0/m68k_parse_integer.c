@@ -1341,7 +1341,7 @@ handleMULx(uint16_t sign, ESize sz, SAddressingMode* src, SAddressingMode* dest)
 			}
 		} else {
 			dl = dest->directRegister;
-			dh = 0;
+			dh = dl;
 			mul64 = 0;
 		}
 
