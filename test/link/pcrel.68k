@@ -1,0 +1,24 @@
+; PC-relative operands whose displacement is not the word right after the
+; opcode: FBcc, FPU (d16,PC) and full format (bd,PC,Xn). Assembled with PINNED
+; the section is fixed and they are resolved by the assembler; without it they
+; are patches resolved at link time. Both must give the same bytes.
+	mc68030
+	fpu68881
+	IMPORT	Far
+	IFD	PINNED
+	SECTION	"Code",CODE[$40800000]
+	ELSE
+	SECTION	"Code",CODE
+	ENDC
+Start:
+	fbge.w	.ahead
+	fmove.x	.const(PC),FP0
+	jmp	(.table.w,PC,D4.w*2)
+	fmove.x	Far(PC),FP1
+	fbeq.w	Far
+.ahead:
+	fbne.w	Start
+.table:
+	nop
+.const:
+	dc.l	1,2,3

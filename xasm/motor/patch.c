@@ -467,8 +467,29 @@ static applyPatch g_patchFunctions[PATCH_BE_32 - PATCH_8 + 1] = {
 
 /* Public functions */
 
+static void
+anchorPcRelative(SExpression* expression, uint32_t offset) {
+	if (expression == NULL)
+		return;
+
+	if (expression->type == EXPR_PC_RELATIVE) {
+		int32_t delta = (int32_t) offset - expression->value.integer;
+		if (delta != 0)
+			expression->left = expr_Add(expression->left, expr_Const(delta));
+		expression->value.integer = (int32_t) offset;
+	}
+
+	anchorPcRelative(expression->left, offset);
+	anchorPcRelative(expression->right, offset);
+}
+
 void
 patch_Create(SSection* section, uint32_t offset, SExpression* expression, EPatchType type) {
+	// PC relative expressions are evaluated against the patch offset (here
+	// and in xlink); make them relative to where they were made instead,
+	// like expr_PcRelative does in a fixed section.
+	anchorPcRelative(expression, offset);
+
 	SPatch* patch = mem_Alloc(sizeof(SPatch));
 	memset(patch, 0, sizeof(SPatch));
 

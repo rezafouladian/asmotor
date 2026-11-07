@@ -273,7 +273,11 @@ expr_PcRelative(SExpression* expression, int adjustment) {
 	} else {
 		SExpression* r = (SExpression*) mem_Alloc(sizeof(SExpression));
 
-		r->value.integer = 0;
+		// Remember where the expression was made. patch_Create moves the
+		// adjustment so the result is relative to this point, not to where
+		// the patch lands (they differ when an instruction emits words between
+		// the two, like FBcc and full format (bd,PC,Xn) modes).
+		r->value.integer = sect_Current != NULL ? (int32_t) sect_Current->usedSpace : 0;
 		r->type = EXPR_PC_RELATIVE;
 		r->isConstant = false;
 		r->left = expr_Const(adjustment);

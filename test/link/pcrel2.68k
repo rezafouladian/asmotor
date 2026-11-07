@@ -1,0 +1,4 @@
+	EXPORT	Far
+	SECTION	"Far",CODE
+Far:
+	rts
