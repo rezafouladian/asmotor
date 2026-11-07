@@ -1,0 +1,12 @@
+0000000 f5 00 f5 0b f5 10 f5 18 f5 4a f5 69 f5 6f f5 0d
+0000020 f5 18 
+0000022
+mmu040.68k:5: W1008 Instruction is privileged
+mmu040.68k:6: W1008 Instruction is privileged
+mmu040.68k:7: W1008 Instruction is privileged
+mmu040.68k:8: W1008 Instruction is privileged
+mmu040.68k:9: W1008 Instruction is privileged
+mmu040.68k:10: W1008 Instruction is privileged
+mmu040.68k:11: W1008 Instruction is privileged
+mmu040.68k:15: W1008 Instruction is privileged
+mmu040.68k:16: W1008 Instruction is privileged

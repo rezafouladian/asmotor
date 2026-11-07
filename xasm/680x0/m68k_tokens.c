@@ -143,6 +143,8 @@ static SLexConstantsWord g_tokens[] = {
     {"PEA",          T_68K_PEA         },
     {"PFLUSH",       T_68K_PFLUSH      },
     {"PFLUSHA",      T_68K_PFLUSHA     },
+    {"PFLUSHAN",     T_68K_PFLUSHAN    },
+    {"PFLUSHN",      T_68K_PFLUSHN     },
     {"PLOADR",       T_68K_PLOADR      },
     {"PLOADW",       T_68K_PLOADW      },
     {"PMOVE",        T_68K_PMOVE       },

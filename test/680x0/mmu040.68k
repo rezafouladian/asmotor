@@ -1,0 +1,16 @@
+	SECTION	"Code",CODE[$1000]
+
+	MC68040
+
+	pflushn	(a0)			; f500
+	pflush	(a3)			; f50b
+	pflushan			; f510
+	pflusha				; f518
+	ptestw	(a2)			; f54a
+	ptestr	(a1)			; f569
+	ptestr	(a7)			; f56f
+
+	MC68060
+
+	pflush	(a5)			; f50d
+	pflusha				; f518

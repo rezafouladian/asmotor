@@ -16,7 +16,7 @@
     along with ASMotor.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// 68030 on-chip PMMU instructions
+// 68030 on-chip PMMU and 68040/68060 MMU instructions
 
 #include <stdbool.h>
 #include <string.h>
@@ -293,12 +293,80 @@ handlePMOVE(SOperands* operands, ESize size, bool flushDisable) {
 	return true;
 }
 
+// 68040 forms: PFLUSHA/PFLUSHAN take no operands, PFLUSH/PFLUSHN/PTESTR/PTESTW take (An)
+static bool
+handleToken040(ETargetToken token, SOperands* operands) {
+	uint16_t opcode;
+	bool hasOperand = true;
+
+	switch (token) {
+		case T_68K_PFLUSHN:
+			opcode = 0xF500;
+			break;
+		case T_68K_PFLUSH:
+			opcode = 0xF508;
+			break;
+		case T_68K_PFLUSHAN:
+			opcode = 0xF510;
+			hasOperand = false;
+			break;
+		case T_68K_PFLUSHA:
+			opcode = 0xF518;
+			hasOperand = false;
+			break;
+		case T_68K_PTESTW:
+			opcode = 0xF548;
+			break;
+		case T_68K_PTESTR:
+			opcode = 0xF568;
+			break;
+		default:
+			err_Error(MERROR_INSTRUCTION_CPU);
+			return true;
+	}
+
+	// The 68060 has no PTEST
+	if ((token == T_68K_PTESTR || token == T_68K_PTESTW) && opt_Current->machineOptions->cpu != CPUF_68040) {
+		err_Error(MERROR_INSTRUCTION_CPU);
+		return true;
+	}
+
+	if (!hasOperand) {
+		sect_OutputConst16(opcode);
+		return true;
+	}
+
+	if (!checkOperandCount(operands, 1, 1))
+		return true;
+
+	SAddressingMode* ea = &operands->modes[0];
+	if (ea->mode != AM_AIND) {
+		err_Error(ERROR_OPERAND);
+		return true;
+	}
+
+	sect_OutputConst16(opcode | (uint16_t) (ea->outer.baseRegister & 7u));
+	return true;
+}
+
+static bool
+isCpu040(void) {
+	return opt_Current->machineOptions->cpu == CPUF_68040 || opt_Current->machineOptions->cpu == CPUF_68060;
+}
+
 static bool
 handleToken(ETargetToken token, ESize size, SOperands* operands) {
 	if (token != T_68K_PMOVE && token != T_68K_PMOVEFD && size != SIZE_DEFAULT)
 		err_Warn(MERROR_IGNORING_SIZE);
 
+	if (isCpu040())
+		return handleToken040(token, operands);
+
 	switch (token) {
+		case T_68K_PFLUSHAN:
+		case T_68K_PFLUSHN:
+			err_Error(MERROR_INSTRUCTION_CPU);
+			return true;
 		case T_68K_PFLUSH:
 			return handlePFLUSH(operands);
 		case T_68K_PFLUSHA:
@@ -331,7 +399,7 @@ m68k_ParseMmuInstruction(void) {
 	ETargetToken token = (ETargetToken) lex_Context->token.id;
 	parse_GetToken();
 
-	if (opt_Current->machineOptions->cpu != CPUF_68030) {
+	if (opt_Current->machineOptions->cpu != CPUF_68030 && !isCpu040()) {
 		err_Error(MERROR_INSTRUCTION_CPU);
 		return true;
 	}
@@ -346,7 +414,7 @@ m68k_ParseMmuInstruction(void) {
 	ESize size = getSizeSpecifier();
 
 	SOperands operands = {0};
-	bool result = token == T_68K_PFLUSHA || getOperands(&operands);
+	bool result = token == T_68K_PFLUSHA || token == T_68K_PFLUSHAN || getOperands(&operands);
 	if (result)
 		result = handleToken(token, size, &operands);
 
