@@ -27,6 +27,9 @@
 #include "m68k_errors.h"
 #include "m68k_fpconst.h"
 
+/* __extension__ keeps GCC quiet about __int128 under -pedantic */
+__extension__ typedef unsigned __int128 uint128_t;
+
 // Decimal to binary conversion is done exactly with big integers, so every
 // constant is correctly rounded regardless of the host's floating point.
 
@@ -225,7 +228,7 @@ parseDecimal(const char* text, SDecimal* decimal) {
 }
 
 static int
-bitLength128(unsigned __int128 value) {
+bitLength128(uint128_t value) {
 	int bits = 0;
 	while (value != 0) {
 		++bits;
@@ -262,7 +265,7 @@ roundDecimal(const SDecimal* decimal, int precision, int minExponent, uint64_t* 
 	if (!big_ShiftLeft(&divisor, precision + 3))
 		return false;
 
-	unsigned __int128 quotient = 0;
+	uint128_t quotient = 0;
 	for (int bit = precision + 3; bit >= 0; --bit) {
 		quotient <<= 1;
 		if (big_Compare(&numerator, &divisor) >= 0) {
@@ -282,10 +285,10 @@ roundDecimal(const SDecimal* decimal, int precision, int minExponent, uint64_t* 
 		exponent = minExponent;
 	}
 
-	unsigned __int128 mantissa = 0;
+	uint128_t mantissa = 0;
 	if (drop < 127) {
-		unsigned __int128 half = (unsigned __int128) 1 << (drop - 1);
-		unsigned __int128 remainder = quotient & ((half << 1) - 1);
+		uint128_t half = (uint128_t) 1 << (drop - 1);
+		uint128_t remainder = quotient & ((half << 1) - 1);
 		mantissa = quotient >> drop;
 		if (remainder > half || (remainder == half && (sticky || (mantissa & 1))))
 			++mantissa;
